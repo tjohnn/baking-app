@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Baking</string>
+    <string name="title_recipe_detail">recipe Detail</string>
+    <string name="num_of_ingredients_format">%d Ingredients.</string>
+    <string name="servings_format">%d Servings.</string>
+    <string name="step_description">Step Description</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="set_description_image">Set description image</string>
+    <string name="previous_button">Previous button</string>
+    <string name="next_button">Next button</string>
+    <string name="no_videos_to_play">No more videos to play.</string>
+    <string name="no_previous_video">No previous videos to play.</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="desired_recipe">Desired Recipe</string>
+    <string name="no_desired_recipe">No desired recipe selected.</string>
+    <string name="step_index">Step %d</string>
+</resources>
