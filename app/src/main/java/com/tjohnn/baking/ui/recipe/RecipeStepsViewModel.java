@@ -39,6 +39,7 @@ public class RecipeStepsViewModel extends AndroidViewModel {
     }
 
     void loadRecipeById(){
+        if(recipe.getValue() != null) return;
         SimpleIdlingResource.getInstance().setIdleState(false);
         compositeDisposable.add(recipeRepository.getRecipeById(recipeId)
                 .subscribeOn(appScheduler.io())

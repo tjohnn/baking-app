@@ -40,6 +40,7 @@ public class RecipeStepDetailViewModel extends AndroidViewModel {
 
 
     void loadRecipeById(){
+        if(recipe.getValue() != null) return;
         System.out.println("Id is" + recipeId);
         SimpleIdlingResource.getInstance().setIdleState(false);
         compositeDisposable.add(recipeRepository.getRecipeById(recipeId)

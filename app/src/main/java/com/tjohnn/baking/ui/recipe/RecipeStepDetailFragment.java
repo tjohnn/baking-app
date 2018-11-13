@@ -29,6 +29,7 @@ import com.tjohnn.baking.data.dto.Step;
 import com.tjohnn.baking.util.AppScheduler;
 import com.tjohnn.baking.util.Provider;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -40,11 +41,12 @@ public class RecipeStepDetailFragment extends Fragment {
     public static final String ARG_RECIPE_ID = "ARG_RECIPE_ID";
     public static final String ARG_STEP_INDEX = "ARG_STEP_INDEX";
     public static final String ARG_VIDEO_PLAY_TIME = "ARG_VIDEO_PLAY_TIME";
+    public static final String ARG_PLAY_WHEN_READY = "ARG_PLAY_WHEN_READY";
 
     private long mItemIndex;
     private long mItemId;
 
-    private List<Step> mItems;
+    private List<Step> mItems = new ArrayList<>();
     private RecipeStepDetailViewModel mViewModel;
 
     @BindView(R.id.simple_player_view)
@@ -59,6 +61,7 @@ public class RecipeStepDetailFragment extends Fragment {
     @BindView(R.id.tv_description)
     TextView descriptionView;
     private long currentPlayTime;
+    private boolean playWhenReady = true;
 
 
     public RecipeStepDetailFragment() {
@@ -80,6 +83,7 @@ public class RecipeStepDetailFragment extends Fragment {
             mItemIndex = savedInstanceState.getLong(ARG_STEP_INDEX);
             currentPlayTime = savedInstanceState.getLong(ARG_VIDEO_PLAY_TIME);
             mItemId = savedInstanceState.getLong(ARG_RECIPE_ID);
+            playWhenReady = savedInstanceState.getBoolean(ARG_PLAY_WHEN_READY);
         }
 
         mViewModel = ViewModelProviders.of(this,
@@ -122,11 +126,34 @@ public class RecipeStepDetailFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        if (Util.SDK_INT > 23 && mItems.size() > 0) {
+            setupVideoPlayer(mItems.get((int)mItemIndex));
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if ((Util.SDK_INT <= 23 || simpleExoPlayer == null) && mItems.size() > 0) {
+            setupVideoPlayer(mItems.get((int)mItemIndex));
+        }
+    }
+
+    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putLong(ARG_RECIPE_ID, mItemId);
         outState.putLong(ARG_STEP_INDEX, mItemIndex);
-        if(simpleExoPlayer != null) outState.putLong(ARG_VIDEO_PLAY_TIME, simpleExoPlayer.getDuration());
-        super.onSaveInstanceState(outState);
+        if(simpleExoPlayer != null) {
+            outState.putBoolean(ARG_PLAY_WHEN_READY, simpleExoPlayer.getPlayWhenReady());
+            outState.putLong(ARG_VIDEO_PLAY_TIME, simpleExoPlayer.getCurrentPosition());
+            super.onSaveInstanceState(outState);
+        }
+        else{
+            outState.putBoolean(ARG_PLAY_WHEN_READY, playWhenReady);
+            outState.putLong(ARG_VIDEO_PLAY_TIME, currentPlayTime);
+        }
     }
 
     private void setupVideoPlayer(Step item) {
@@ -153,8 +180,8 @@ public class RecipeStepDetailFragment extends Fragment {
                 .setExtractorsFactory(new DefaultExtractorsFactory())
                 .createMediaSource(Uri.parse(item.videoUrl));
         simpleExoPlayer.prepare(videoSource);
-        simpleExoPlayer.setPlayWhenReady(true);
         simpleExoPlayer.seekTo(currentPlayTime);
+        simpleExoPlayer.setPlayWhenReady(playWhenReady);
     }
 
     @OnClick(R.id.btn_previous)
@@ -182,17 +209,34 @@ public class RecipeStepDetailFragment extends Fragment {
     }
 
     private void clearVideoResource() {
-        if(simpleExoPlayer != null) simpleExoPlayer.release();
+
+        if(simpleExoPlayer != null) {
+            currentPlayTime = simpleExoPlayer.getCurrentPosition();
+            playWhenReady = simpleExoPlayer.getPlayWhenReady();
+            simpleExoPlayer.release();
+        }
+        simpleExoPlayer = null;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (Util.SDK_INT <= 23) {
+            clearVideoResource();
+        }
     }
 
     @Override
     public void onStop() {
-        clearVideoResource();
         super.onStop();
+        if (Util.SDK_INT > 23) {
+            clearVideoResource();
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        clearVideoResource();
     }
 }
